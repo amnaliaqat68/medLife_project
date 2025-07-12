@@ -11,34 +11,46 @@ export default function loginPage() {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
     try {
       const response = await axios.post("/api/auth/login", form, {
         withCredentials: true 
       });
+      
       if (response.status === 200) {
-         const data = response.data; 
-        // ✅ FIX: Removed localStorage.setItem since middleware uses cookies
-        if (data.user.role === "superAdmin") router.push("/superadmin/dashboard");
-      else if (data.user.role === "admin") router.push("/admin/dashboard");
-      else if (data.user.role === "dsm") router.push("/dsm/dashboard"); // ✅ FIX: Updated to lowercase
-      else alert("Unknown role. Contact system admin.");
+        const data = response.data; 
+        
+        // Redirect based on user role
+        if (data.user.role === "superAdmin") {
+          router.push("/Superadmin/dashboard");
+        } else if (data.user.role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (data.user.role === "dsm") {
+          router.push("/SMuser/dashboard");
+        } else {
+          setError("Unknown role. Contact system admin.");
+        }
       }
     } catch (error) {
       console.error("Login failed:", error.response?.data || error.message);
-      alert(error.response?.data?.error || "Login failed. Please try again.");
+      setError(error.response?.data?.error || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-     
   };
-  
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-teal-50 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg border border-indigo-100">
         <h2 className="text-2xl font-bold text-indigo-900 mb-4 text-center">
-          Sign Up for MedCSR
+          Login to MedCSR
         </h2>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
@@ -69,13 +81,28 @@ export default function loginPage() {
             />
           </div>
 
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-medium shadow-sm transition-colors duration-200 text-sm"
+            disabled={isLoading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-2 rounded-md font-medium shadow-sm transition-colors duration-200 text-sm"
           >
-            Log In
+            {isLoading ? "Logging in..." : "Log In"}
           </button>
         </form>
+        
+        <p className="text-center text-sm text-gray-600 mt-4">
+          Don't have an account?{" "}
+          <Link
+            href="/landing-page/signup"
+            className="text-teal-500 hover:text-teal-600 font-semibold transition-colors duration-200"
+          >
+            Sign Up
+          </Link>
+        </p>
       </div>
     </main>
   );

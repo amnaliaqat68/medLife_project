@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
-
 export default function SignupForm() {
   const [formData, setFormData] = useState({
     name: "",
@@ -10,33 +9,44 @@ export default function SignupForm() {
     password: "",
     role: "",
   });
-const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formData),
-  credentials: "include",
-    });
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+        credentials: "include",
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    
+      if (!res.ok) {
+        setError(data.error || "Signup failed. Please try again.");
+        return;
+      }
 
-   
-    if (formData.role === "superAdmin") {
-      router.push("/Superadmin/dashboard");
-    } else {
-      router.push("/");
+      // Show success message and redirect to login
+      alert("Signup successful! Please login with your credentials.");
+      router.push("/landing-page/log-in");
+    } catch (error) {
+      console.error("Signup error:", error);
+      setError("An error occurred during signup. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
-
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-teal-50 flex items-center justify-center px-4 py-8">
@@ -49,7 +59,7 @@ const router = useRouter();
             <input
               type="text"
               name="name"
-              placeholder="name"
+              placeholder="Name"
               value={formData.name}
               onChange={handleChange}
               required
@@ -86,18 +96,23 @@ const router = useRouter();
               value={formData.role}
               onChange={handleChange}
               required
-              className="..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-400 transition-all bg-gray-50 text-sm"
             >
               <option value="">Select Role</option>
               <option value="superAdmin">SuperAdmin</option>
             </select>
           </div>
 
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-medium shadow-sm transition-colors duration-200 text-sm"
+            disabled={isLoading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-2 rounded-md font-medium shadow-sm transition-colors duration-200 text-sm"
           >
-            sign up
+            {isLoading ? "Signing up..." : "Sign up"}
           </button>
         </form>
       </div>

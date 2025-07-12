@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +39,7 @@ import Image from "next/image";
 import { LogOut, Plus, Users } from "lucide-react";
 
 export default function SuperAdminDashboard() {
+  const router = useRouter();
   const [users, setUsers] = useState([
     {
       id: 1,
@@ -56,6 +58,25 @@ export default function SuperAdminDashboard() {
   });
 
   const [userRole] = useState("SuperAdmin");
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        router.push("/landing-page/log-in");
+      } else {
+        console.error("Logout failed");
+        alert("Logout failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("An error occurred during logout. Please try again.");
+    }
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -107,7 +128,10 @@ export default function SuperAdminDashboard() {
               <p className="text-sm text-gray-500">System Administration</p>
             </div>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button 
+            onClick={handleLogout}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>

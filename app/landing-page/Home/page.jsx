@@ -10,9 +10,12 @@ export default function HomePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const response = await axios.post(
@@ -26,10 +29,8 @@ export default function HomePage() {
       if (response.status === 200) {
         const data = response.data;
         console.log("User role:", data.user.role);
-        console.log("Issued token:", token);
 
-        const role = data.user.role;
-
+        // Redirect based on user role
         if (data.user.role === "superAdmin") {
           router.push("/Superadmin/dashboard");
         } else if (data.user.role === "admin") {
@@ -39,12 +40,14 @@ export default function HomePage() {
         } else if (data.user.role === "sm") {
           router.push("/sm/dashboard");
         } else {
-          alert("Unknown role. Please contact support.");
+          setError("Unknown role. Please contact support.");
         }
       }
     } catch (error) {
       console.error("Login failed:", error.response?.data || error.message);
-      alert(error.response?.data?.error || "Login failed. Please try again.");
+      setError(error.response?.data?.error || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,7 +77,7 @@ export default function HomePage() {
             <span className="text-teal-400">MedCSR</span>
           </h2>
           <p className="text-lg text-black mb-8 max-w-xl leading-relaxed">
-            MedCSR is MedLife’s internal platform to digitally manage doctor
+            MedCSR is MedLife's internal platform to digitally manage doctor
             commitments, streamline CSR approvals, and ensure ethical compliance
             — all in one place.
           </p>
@@ -106,9 +109,10 @@ export default function HomePage() {
             )}
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold shadow-md transition-colors duration-300"
+              disabled={isLoading}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-3 rounded-lg font-semibold shadow-md transition-colors duration-300"
             >
-              Login
+              {isLoading ? "Logging in..." : "Login"}
             </button>
           </form>
           <p className="text-center text-sm text-gray-600 mt-5">
